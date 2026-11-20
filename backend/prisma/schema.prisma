@@ -1,0 +1,71 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  NORMAL_USER
+  STORE_OWNER
+}
+
+model User {
+  id           String    @id @default(uuid()) @db.VarChar(36)
+  name         String    @db.VarChar(60)
+  email        String    @unique @db.VarChar(255)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  address      String    @db.VarChar(400)
+  role         Role      @default(NORMAL_USER)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  // Relationships
+  ownedStore   Store?    @relation("StoreOwner")
+  ratings      Rating[]
+
+  @@index([role])
+  @@index([name])
+  @@index([email])
+  @@map("users")
+}
+
+model Store {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  name      String   @db.VarChar(60)
+  email     String   @unique @db.VarChar(255)
+  address   String   @db.VarChar(400)
+  ownerId   String?  @unique @map("owner_id") @db.VarChar(36)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relationships
+  owner     User?    @relation("StoreOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  ratings   Rating[]
+
+  @@index([name])
+  @@index([address])
+  @@map("stores")
+}
+
+model Rating {
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  userId      String   @map("user_id") @db.VarChar(36)
+  storeId     String   @map("store_id") @db.VarChar(36)
+  ratingValue Int      @map("rating_value")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relationships
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store       Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  // Enforces that a user can submit only one rating per store (updated on subsequent ratings)
+  @@unique([userId, storeId], name: "unique_user_store_rating")
+  @@index([storeId])
+  @@index([userId])
+  @@map("ratings")
+}

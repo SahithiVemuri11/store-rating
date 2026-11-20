@@ -1,0 +1,21 @@
+{
+  "name": "store-rating-portal",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "client"
+  ],
+  "scripts": {
+    "backend:dev": "npm.cmd run dev --workspace=backend",
+    "backend:build": "npm.cmd run build --workspace=backend",
+    "backend:migrate": "npm.cmd run db:migrate --workspace=backend",
+    "backend:seed": "npm.cmd run db:seed --workspace=backend",
+    "client:dev": "npm.cmd run dev --workspace=client",
+    "client:build": "npm.cmd run build --workspace=client",
+    "dev": "concurrently \"npm.cmd run backend:dev\" \"npm.cmd run client:dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.5"
+  }
+}
